@@ -41,6 +41,18 @@ defmodule History do
     end)
   end
 
+  defp group_ranges([head | rest]) do
+    Enum.reduce(rest, {head, [], []}, fn current, {prev, group, grouped} ->
+      if Range.disjoint?(current, prev) do
+        {current, [current], [Enum.reverse(group) | grouped]}
+      else
+        {current, [current | group], grouped}
+      end
+    end)
+    |> elem(2)
+    |> Enum.reverse()
+  end
+
   defp get_match_indices(history, term) do
     history
     |> Enum.with_index()
@@ -83,20 +95,6 @@ defmodule History do
       history_count
     else
       potential_index
-    end
-  end
-
-  defp group_ranges([current | rest]), do: do_group_ranges(rest, [current], [])
-
-  defp do_group_ranges([], group, grouped) do
-    Enum.reverse([Enum.reverse(group) | grouped])
-  end
-
-  defp do_group_ranges([current | rest], [prev | _] = group, grouped) do
-    if Range.disjoint?(current, prev) do
-      do_group_ranges(rest, [current], [Enum.reverse(group) | grouped])
-    else
-      do_group_ranges(rest, [current | group], grouped)
     end
   end
 
