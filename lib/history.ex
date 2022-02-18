@@ -1,5 +1,23 @@
 defmodule History do
-  def grep(term, opts) do
+  def search do
+    load_history()
+    |> Enum.with_index(1)
+    |> Enum.each(fn {value, index} ->
+      IO.write("#{index}  #{value}")
+    end)
+  end
+
+  def search(term) do
+    load_history()
+    |> Enum.filter(&String.match?(&1, ~r/#{term}/))
+    |> Enum.with_index(1)
+    |> Enum.each(fn {value, index} ->
+      IO.write("#{index}  ")
+      IO.write(String.replace(value, term, "#{IO.ANSI.red()}#{term}#{IO.ANSI.default_color()}"))
+    end)
+  end
+
+  def search(term, opts) do
     history = load_history()
     history_count = Enum.count(history)
 
@@ -60,7 +78,7 @@ defmodule History do
 
   defp lower_bound(index, context_a), do: index + context_a
 
-  def group_ranges([current | rest]), do: do_group_ranges(rest, [current], [])
+  defp group_ranges([current | rest]), do: do_group_ranges(rest, [current], [])
 
   defp do_group_ranges([], group, grouped) do
     Enum.reverse([Enum.reverse(group) | grouped])
