@@ -23,7 +23,7 @@ defmodule History do
 
     history
     |> get_match_indices(term)
-    |> maybe_add_contexts(opts)
+    |> maybe_add_contexts(opts, history_count)
     |> group_ranges()
     |> Enum.each(fn range_list ->
       parse_range(range_list)
@@ -52,13 +52,13 @@ defmodule History do
     end)
   end
 
-  defp maybe_add_contexts(match_indices, opts) do
+  defp maybe_add_contexts(match_indices, opts, history_count) do
     context_a = Keyword.get(opts, :A, 0)
     context_b = Keyword.get(opts, :B, 0)
 
     match_indices
     |> Enum.map(fn index ->
-      upper_bound(index, context_b)..lower_bound(index, context_a)
+      upper_bound(index, context_b)..lower_bound(index, context_a, history_count)
     end)
   end
 
@@ -74,9 +74,17 @@ defmodule History do
     end
   end
 
-  defp lower_bound(index, 0), do: index
+  defp lower_bound(index, 0, _), do: index
 
-  defp lower_bound(index, context_a), do: index + context_a
+  defp lower_bound(index, context_a, history_count) do
+    potential_index = index + context_a
+
+    if potential_index > history_count do
+      history_count
+    else
+      potential_index
+    end
+  end
 
   defp group_ranges([current | rest]), do: do_group_ranges(rest, [current], [])
 
